@@ -1,4 +1,4 @@
-package auth_service
+package handlers
 
 import (
 	"encoding/json"
@@ -6,9 +6,8 @@ import (
 	"net/http"
 )
 
-type User struct {
-	Username     string `json:"username"`
-	PasswordHash string `json:"-"`
+type Handler struct {
+	Logger *log.Logger
 }
 
 type Details struct {
@@ -16,8 +15,15 @@ type Details struct {
 	Password string `json:"password"`
 }
 
+func New(logger *log.Logger) *Handler {
+	return &Handler{
+		Logger: logger,
+	}
+}
+
 // .../register
-func register(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+
 	var details Details
 
 	if err := json.NewDecoder(r.Body).Decode(&details); err != nil {
@@ -25,7 +31,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Регистрация нового пользователя: %s", details.Username)
+	h.Logger.Printf("Регистрация нового пользователя: %s", details.Username)
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -37,7 +43,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 // .../login
-func login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+
 	var details Details
 
 	if err := json.NewDecoder(r.Body).Decode(&details); err != nil {
