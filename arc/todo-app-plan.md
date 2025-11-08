@@ -6,7 +6,7 @@
 |---      |---          |
 | Author  | AnjeZenda   |
 | Created | 07.11.2025  |
-| Changed | 07.11.2025  |
+| Changed | 08.11.2025  |
 | Tags    | arc, plan   |
 
 
@@ -25,12 +25,27 @@
 
 - `POST /statistics`, с передачей фильтров в body
 
-Реализовать сервис аунтификации и авторизацииЖ
+Реализовать сервис аунтификации и авторизации:
 
 - `POST /register` - создание учетной записи
 - `POST /login` - вход в аккаунт
 
-### Second stage
+---
+
+В рамках текущей стадии предлагается придерживаться следующей иерархии
+
+```
+service
+    cmd
+        main.go
+    internal
+        adapter
+        cases
+        entities
+        port
+    pkg
+        application
+```
 
 
 ## Mobile x Frontend
@@ -39,18 +54,30 @@
 
 ## Infra
 
+### First stage
+
+Создание сущностей Task и User удовлетворяющих диаграммам ниже. В базы данных будет использоваться `postgres`
+
 ```mermaid
 erDiagram
-Task }o--|| User: Operate
+    Task }o--|| User: Operate
+    User {
+        uuid id PK
+        string name 
+        string email 
+        string password
+    }
+    Task {
+        uuid id PK
+        uuid user_id FK 
+        string name 
+        timestamp created_at 
+        bool is_finished 
+        string description 
+    }
 ```
 
-```mermaid
-classDiagram
-
-class User {
-    string name
-    string email
-    string password
-}
-
-```
+Необходимо создать docker-compose, который поднимал бы:
+- Client
+- Database
+- Server (в виде трех приложений: TaskManager, Statistics, Auth)
