@@ -1,20 +1,34 @@
 package main
 
 import (
+	"auth/internal/adapter/db"
 	"auth/pkg"
-	"net/http"
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	app := pkg.New()
+	if err := godotenv.Load(); err != nil {
+		log.Println("Файл .env не найден, используются переменные окружения")
+	}
 
-	app.Logger.Println("Запускаем сервер регистрации/входа...")
-
-	http.HandleFunc("/registration", app.Handlers.RegisterHandler)
-	http.HandleFunc("/login", app.Handlers.LoginHandler)
-
-	err := http.ListenAndServe(":8080", nil)
+	database, err := db.Connect()
 	if err != nil {
-		app.Logger.Fatal(err)
+		log.Fatalf("Не удалось подключиться к базе данных: %v", err)
+	}
+	defer database.Close()
+
+	app := pkg.New(database)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Сервер запускается на порту %s...", port)
+	if err := app.Run(port); err != nil {
+		log.Fatalf("Ошибка при запуске сервера: %v", err)
 	}
 }

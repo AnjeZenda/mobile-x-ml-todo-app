@@ -1,24 +1,36 @@
 package pkg
 
 import (
-	"auth/internal/handlers"
+	"database/sql"
 	"log"
+	"net/http"
 	"os"
+
+	"auth/internal/adapter/api"
 )
 
 type App struct {
-	Handlers *handlers.Handler
-	Logger   *log.Logger
+	DB     *sql.DB
+	API    http.Handler
+	Logger *log.Logger
 }
 
-func New() *App {
-
+func New(db *sql.DB) *App {
 	logger := log.New(os.Stdout, "Auth-service: ", log.LstdFlags)
 
-	handler := handlers.New(logger)
+	apiHandler := api.NewAPI(db)
 
 	return &App{
-		Handlers: handler,
-		Logger:   logger,
+		DB:     db,
+		API:    apiHandler,
+		Logger: logger,
 	}
+}
+
+func (a *App) Run(port string) error {
+	if port == "" {
+		port = "8080"
+	}
+	a.Logger.Printf("Запущен сервис статистики на порту %s", port)
+	return http.ListenAndServe(":"+port, a.API)
 }
